@@ -9,6 +9,7 @@ import snow_icon from '../assets/snow.png';
 import wind_icon from '../assets/wind.png';
 import humidity_icon from '../assets/humidity.png';
 const Weather = () => {  // Changed 'function Weather =' to 'const Weather ='
+    
   return (
     <div className='weather'> 
       <div className="search-bar">  {/* Fixed typo from 'serch-bar' to 'search-bar' */}
