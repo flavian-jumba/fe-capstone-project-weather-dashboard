@@ -11,7 +11,8 @@ import humidity_icon from '../assets/humidity.png';
 
 const Weather = () => {
     const inputRef = useRef(); // Reference for the input field
-    const [weatherData, setWeatherData] = useState({}); // Initialize state for weather data
+    const [weatherData, setWeatherData] = useState(null); // Initialize state for weather data
+    const [errorMessage, setErrorMessage] = useState(""); // State to handle error messages
 
     // Mapping weather icons to their respective codes
     const allIcons = {
@@ -28,9 +29,12 @@ const Weather = () => {
             const response = await fetch(url);
             const data = await response.json();
 
-            // Check if the response contains valid weather data
-            if (data.weather) {
-                const icon = allIcons[data.weather[0].icon] || clear_icon; // Default to clear icon
+            // Log the data for debugging
+            console.log(data);
+
+            // Check if the response contains valid weather data (status code 200)
+            if (data.cod === 200) {
+                const icon = allIcons[data.weather[0].icon] || clear_icon; // Default to clear icon if no matching icon is found
                 setWeatherData({
                     humidity: data.main.humidity,
                     windspeed: data.wind.speed,
@@ -38,17 +42,20 @@ const Weather = () => {
                     location: data.name,
                     icon: icon,
                 });
+                setErrorMessage(""); // Clear any previous error messages
             } else {
-                console.error("Weather data not found");
+                setWeatherData(null); // Clear weather data
+                setErrorMessage("City not found. Please enter a valid city name."); // Set an error message
             }
         } catch (error) {
             console.error("Error fetching weather data:", error); // Log any errors
+            setErrorMessage("Failed to fetch weather data. Please try again later."); // Set a user-friendly error message
         }
     };
 
-    // Use effect to fetch weather data for Nigeria on component mount
+    // Use effect to fetch weather data for an initial city (e.g., "Lagos") on component mount
     useEffect(() => {
-        search("sahara");
+        search("Lagos"); // Change to a valid city name
     }, []);
 
     return (
@@ -63,7 +70,7 @@ const Weather = () => {
                             console.log("Searching for:", city); // Debug log
                             search(city);
                         } else {
-                            console.error("Please enter a city name");
+                            setErrorMessage("Please enter a city name"); // Handle empty input
                         }
                     }}
                 >
@@ -71,8 +78,10 @@ const Weather = () => {
                 </button>
             </div>
 
-            {/* Conditional rendering to handle loading and displaying weather data */}
-            {weatherData.location ? (
+            {/* Conditional rendering to handle errors and display weather data */}
+            {errorMessage && <p className="error">{errorMessage}</p>}
+
+            {weatherData ? (
                 <>
                     <img src={weatherData.icon} className='weather-icon' alt="Weather Icon" />
                     <p className='temperature'>{weatherData.temperature}°C</p>
@@ -95,14 +104,10 @@ const Weather = () => {
                     </div>
                 </>
             ) : (
-                <p>Loading...</p> // Show loading text while fetching data
+                <p>Loading...</p> // Show loading text or handle error
             )}
         </div>
     );
 }
 
 export default Weather;
-
-
-
-
