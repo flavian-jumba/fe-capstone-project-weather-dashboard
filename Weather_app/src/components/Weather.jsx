@@ -10,32 +10,46 @@ import wind_icon from '../assets/wind.png';
 import humidity_icon from '../assets/humidity.png';
 
 const Weather = () => {
-    const inputRef = useRef(); // Reference for the input field
-    const [weatherData, setWeatherData] = useState(null); // Initialize state for weather data
-    const [errorMessage, setErrorMessage] = useState(""); // State to handle error messages
+    const inputRef = useRef();
 
-    // Mapping weather icons to their respective codes
+    const [weatherData, setWeatherData] = useState(null);
+
     const allIcons = {
-        "01d": clear_icon,
-        "01n": clear_icon,
-        "02d": cloud_icon,
-        // Add more icons as needed
+        "01d": clear_icon,   // clear sky (day)
+        "01n": clear_icon,   // clear sky (night)
+        "02d": cloud_icon,   // few clouds (day)
+        "02n": cloud_icon,   // few clouds (night)
+        "03d": cloud_icon,   // scattered clouds (day)
+        "03n": cloud_icon,   // scattered clouds (night)
+        "04d": drizzle_icon, // broken clouds (day)
+        "04n": drizzle_icon, // broken clouds (night)
+        "09d": rain_icon,    // shower rain (day)
+        "09n": rain_icon,    // shower rain (night)
+        "10d": rain_icon,    // rain (day)
+        "10n": rain_icon,    // rain (night)
+        "11d": rain_icon,    // thunderstorm (day)
+        "11n": rain_icon,    // thunderstorm (night)
+        "13d": snow_icon,    // snow (day)
+        "13n": snow_icon,    // snow (night)
+        "50d": cloud_icon,   // mist (day)
+        "50n": cloud_icon    // mist (night)
     };
 
-    // Function to fetch weather data based on city name
     const search = async (city) => {
+        if (city === "") {
+            alert("Please enter a city name");
+            return;
+        }
         try {
-            
             const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${import.meta.env.VITE_APP_ID}`;
             const response = await fetch(url);
             const data = await response.json();
+            console.log("API Response:", data);  // Debugging: check the response
 
-            // Log the data for debugging
-            console.log(data);
-
-            // Check if the response contains valid weather data (status code 200)
             if (data.cod === 200) {
-                const icon = allIcons[data.weather[0].icon] || clear_icon; // Default to clear icon if no matching icon is found
+                const iconCode = data.weather[0].icon;  // Check the icon code
+                const icon = allIcons[iconCode] || clear_icon;  // Map or fallback to clear
+
                 setWeatherData({
                     humidity: data.main.humidity,
                     windspeed: data.wind.speed,
@@ -43,72 +57,54 @@ const Weather = () => {
                     location: data.name,
                     icon: icon,
                 });
-                setErrorMessage(""); // Clear any previous error messages
             } else {
-                setWeatherData(null); // Clear weather data
-                setErrorMessage("City not found. Please enter a valid city name."); // Set an error message
+                alert(`Error: ${data.message}`);
+                setWeatherData(null);
             }
         } catch (error) {
-            console.error("Error fetching weather data:", error); // Log any errors
-            setErrorMessage("Failed to fetch weather data. Please try again later."); // Set a user-friendly error message
+            setWeatherData(null);
+            console.error("Error in fetching the data:", error);
         }
     };
 
-    // Use effect to fetch weather data for an initial city (e.g., "Lagos") on component mount
     useEffect(() => {
-        search("Lagos"); // Change to a valid city name
+        search("Kenya"); // Initial search for Kenya
     }, []);
 
     return (
         <div className='weather'>
-            <div className="search-bar">
-                <input ref={inputRef} type="text" placeholder='Search for a city...' />
-                <button
-                    type="button" // Ensure button type is set to button
-                    onClick={() => {
-                        const city = inputRef.current.value;
-                        if (city) {
-                            console.log("Searching for:", city); // Debug log
-                            search(city);
-                        } else {
-                            setErrorMessage("Please enter a city name"); // Handle empty input
-                        }
-                    }}
-                >
-                    Search
-                </button>
+            <div className='search-bar'>
+                <input ref={inputRef} type="text" placeholder='Search' />
+                <img src={search_icon} alt="Search" onClick={() => search(inputRef.current.value)} />
             </div>
-
-            {/* Conditional rendering to handle errors and display weather data */}
-            {errorMessage && <p className="error">{errorMessage}</p>}
 
             {weatherData ? (
                 <>
-                    <img src={weatherData.icon} className='weather-icon' alt="Weather Icon" />
+                    <img src={weatherData.icon} alt="Weather Icon" className='weather-icon' />
                     <p className='temperature'>{weatherData.temperature}°C</p>
                     <p className='location'>{weatherData.location}</p>
                     <div className='weather-data'>
                         <div className='col'>
-                            <img src={humidity_icon} alt="Humidity Icon" />
+                            <img src={humidity_icon} alt="Humidity" />
                             <div>
                                 <p>{weatherData.humidity}%</p>
                                 <span>Humidity</span>
                             </div>
                         </div>
                         <div className='col'>
-                            <img src={wind_icon} alt="Wind Speed Icon" />
+                            <img src={wind_icon} alt="Windspeed" />
                             <div>
-                                <p>{weatherData.windspeed} km/h</p>
-                                <span>Wind Speed</span>
+                                <p>{weatherData.windspeed} Km/h</p>
+                                <span>Windspeed</span>
                             </div>
                         </div>
                     </div>
                 </>
             ) : (
-                <p>Loading...</p> // Show loading text or handle error
+                <p>Loading weather data...</p>
             )}
         </div>
     );
-}
+};
 
 export default Weather;
